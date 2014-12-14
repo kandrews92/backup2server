@@ -21,3 +21,6 @@ Optional:
 	
 	-change the source directory target to reflect the folder(s) 
 	that are desired to be backed up
+	-add this to your crontab by running "crontab -e" in the 
+	/home/user/ dir and set the approriate time that you would 
+	like it to run at.
