@@ -1,0 +1,59 @@
+#!/bin/sh
+
+# BEGIN CONFIGURATION ======================================
+
+BACKUP_DIR="tmp"
+SOURCE_DIR="/home/kraig/"
+HOME=~/
+
+THE_DATE=$(date +%a-%b%d-%Y_%H-%M)
+
+RSYNC_USER="kraig"
+RSYNC_PASS="kraig92"
+RSYNC_SERVER="kevinjandrews.com"
+RSYNC_DIR="/backups/"
+SYNC="rsync"
+
+## COMMAND PATHS ##
+TAR_PATH="$(which tar)"
+RSYNC_PATH="$(which rsync)"
+
+# END CONFIGURATION ========================================
+
+# Announce the backup time
+START=$(date +%s)
+echo "Backup Started: $(date)"
+
+if [ ! -d "$BACKUP_DIR" ]; then
+	mkdir $BACKUP_DIR
+fi
+
+# Get a list of files in the source dir and tar them 1 by 1
+echo "----------------------------"
+cd $SOURCE_DIR
+ARCHIVE=$BACKUP_DIR-$THE_DATE.tar.gz
+for d in *
+do
+	if [ $d != "$BACKUP_DIR" ]
+	then
+		echo "Moving $d..."
+		cp $d -at $HOME$BACKUP_DIR
+	fi
+done
+echo "----------------------------"
+
+cd $HOME
+
+echo "Archiving $BACKUP_DIR..."
+$TAR_PATH --exclude="*/log" --exclude="$SOURCE_DIR$BACKUP_DIR" $BACKUP_DIR -czf $BACKUP_DIR-$THE_DATE.tar.gz
+
+TRANSFER=$HOME$BACKUP_DIR-$THE_DATE.tar.gz
+
+echo "Sending $TRANSFER to $RSYNC_SERVER"
+sshpass -p $RSYNC_PASS rsync $TRANSFER $RSYNC_USER@$RSYNC_SERVER:$RSYNC_DIR
+
+rm -rf $BACKUP_DIR
+rm -rf $TRANSFER
+END=$(date +%s)
+TOTAL=$(($END - $START))
+echo "Backup and transfer complete! It took $TOTAL seconds."

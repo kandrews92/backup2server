@@ -56,16 +56,7 @@ echo "-------------------------------"
 cd $HOME_PATH
 
 echo "Archiving $TEMP_DIR..."
-$TAR_PATH --exclude="*/log" --exclude="$TEMP_DIR" $TEMP_DIR -czf $TO_BE_ARCHIVED # create tar.gz file of the $TEMP_DIR with the appropriate excludes
-
-echo "Sending $TO_BE_ARCHIVED to $RSYNC_USER@$RYSNC_SERVER:$RSYNC_DIR"
-sshpass -p $RSYNC_PASS rsync $TO_BE_ARCHIVED $RSYNC_USER@$RYSNC_SERVER:$RSYNC_DIR
-
-rm -rf $TEMP_DIR
-rm -rf $TRANSFER
-END=$(date +%s)
-TOTAL=$(($END - $START))
-echo "Backup and transfer complete! It took $TOTAL seconds..."
+$TAR_PATH --exclude="*/log" --exclude="$TEMP_DIR" $TEMP_DIR -czf $TO_BE_ARCHIVED
 
 
 
