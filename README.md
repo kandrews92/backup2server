@@ -6,7 +6,7 @@ Backup Specific Directories to a server
 To use:
 
 	-you may need to become root to do this (if so,
-	run "sudo su"
+	run "sudo su")
 	-"chmod +x (script name)" (to make executable)
 	-move to /bin/ (so that it can be used a command)
 

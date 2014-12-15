@@ -64,7 +64,7 @@ echo "Sending $TO_BE_ARCHIVED to $RSYNC_USER@$RYSNC_SERVER:$RSYNC_DIR"
 sshpass -p $RSYNC_PASS rsync $TO_BE_ARCHIVED $RSYNC_USER@$RYSNC_SERVER:$RSYNC_DIR
 
 rm -rf $TEMP_DIR
-rm -rf $TO_BE_ARCHIVED
+
 END=$(date +%s)
 TOTAL=$(($END - $START))
 echo "Backup and transfer complete! It took $TOTAL seconds..."

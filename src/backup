@@ -1,71 +1,85 @@
 #!/bin/sh
 
-# VARIABLES ================================================
-#Change these as needed.
+# Variables ===========================================
 
-USER="kraig" #current machine user
+#Change these to be machine specific
 
-TO_BE_ARCHIVED="/home/$USER/" #path of folders to be backed up
+## Host Machine Info ##
+USER="kandrews" # host machine username
+TOP="/home/$USER" #top directory under user
+################################
 
-RSYNC_USER="kraig" #server user name
-RSYNC_PASS="kraig92" #server password
+## Target server information ##
+RSYNC_USER="kraig" #username
+RSYNC_PASS="kraig92" #password
 RSYNC_SERVER="kevinjandrews.com" #server address
-RSYNC_DIR="/backups/" #target dir for backup
+RSYNC_DIR="/backups/" # target directory on server
+################################
 
-ARCHIVE=$BACKUP_DIR-$THE_DATE.tar.gz # *.tar.gz name
+## Backup Details ##
+TO_BE_ARCHIVED="$TOP/tests" #specific directory to be backed up 
+NAME="Backup" #name of the the item to be sent.
 
-# END VARIABLES ============================================
+# End Variables ========================================
 
-# CHANGE BELOW THIS LINE SHOULD NOT BE NEEDED
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Change below here at own risk
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-# BEGIN CONFIGURATION ======================================
-
-HOME_PATH="/home/$USER/" #top dir path
-TEMP_DIR="/home/$USER/tmp" #temporary storage folder
+# Begin Configuration ==================================
 
 THE_DATE=$(date +%a-%b%d-%Y_%H-%M)
 
-## COMMAND PATHS ##
+## misc vars ##
+TEMP_DIR="$TOP/tmp" #temp storage folder to be made
+SERVER_CREDS="$RSYNC_USER@$RSYNC_SERVER:$RSYNC_DIR" #full server data
+###############
+
+FULL_NAME=$NAME-$THE_DATE.tar.gz #full name of backup archive
+
+## binaries ##
 TAR_PATH="$(which tar)"
 RSYNC_PATH="$(which rsync)"
+##############
 
-# END CONFIGURATION ========================================
+# End Configuration ====================================
+
+# Main Script ==========================================
 
 START=$(date +%s) #start time of backup
-echo "Backup Started: $(date)"
+echo "Backup started: $(date)"
+echo "----------------------------"
+echo "All data in $TO_BE_ARCHIVED will be backed up"
+echo "and stored to $SERVER_CREDS"
+echo "----------------------------"
 
-# check for $TEMP_DIR, if not created, then create
+#create temp dir for storage
 if [ ! -d "$TEMP_DIR" ]; then
 	mkdir $TEMP_DIR
 fi
 
-# Get a list of files in the source dir and copy them to the
+# get a list of files in the desired dir and copy them to the 
 # folder $TEMP_DIR
-echo "------------------------------"
-cd $TO_BE_ARCHIVED # move to dir to be archived
-for d in *
+echo "----------------------------"
+cd $TO_BE_ARCHIVED # move to the correct dir
+for d in * 
 do 
 	if [ $d != "$TEMP_DIR" ]
 	then
 		echo "Moving $d to $TEMP_DIR..."
-		cp $d -at $TEMP_DIR # move files/folders to $TEMP_DIR
+		cp $d -at $TEMP_DIR #move files/folders to $TEMP_DIR
 	fi
 done 
-echo "-------------------------------"
+echo "-----------------------------"
 
-cd $HOME_PATH
+cd $TOP
 
 echo "Archiving $TEMP_DIR..."
-$TAR_PATH --exclude="*/log" --exclude="$TEMP_DIR" $TEMP_DIR -czf $TO_BE_ARCHIVED # create tar.gz file of the $TEMP_DIR with the appropriate excludes
+$TAR_PATH --exclude="*/log" $TEMP_DIR -czf $FULL_NAME #archive $TEMP
 
-echo "Sending $TO_BE_ARCHIVED to $RSYNC_USER@$RYSNC_SERVER:$RSYNC_DIR"
-sshpass -p $RSYNC_PASS rsync $TO_BE_ARCHIVED $RSYNC_USER@$RYSNC_SERVER:$RSYNC_DIR
+echo "Sending $FULL_NAME to $SERVER_CREDS..."
+sshpass -p $RSYNC_PASS rsync $FULL_NAME $SERVER_CREDS
 
-rm -rf $TEMP_DIR
-rm -rf $TRANSFER
 END=$(date +%s)
 TOTAL=$(($END - $START))
 echo "Backup and transfer complete! It took $TOTAL seconds..."
-
-
-
