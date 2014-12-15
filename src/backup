@@ -13,11 +13,11 @@ TOP="/home/$USER" #top directory under user
 RSYNC_USER="kraig" #username
 RSYNC_PASS="kraig92" #password
 RSYNC_SERVER="kevinjandrews.com" #server address
-RSYNC_DIR="/backups/" # target directory on server
+RSYNC_DIR="/backups" # target directory on server
 ################################
 
 ## Backup Details ##
-TO_BE_ARCHIVED="$TOP/tests" #specific directory to be backed up 
+TO_BE_ARCHIVED="$TOP" #specific directory to be backed up 
 NAME="Backup" #name of the the item to be sent.
 
 # End Variables ========================================
@@ -31,6 +31,7 @@ NAME="Backup" #name of the the item to be sent.
 THE_DATE=$(date +%a-%b%d-%Y_%H-%M)
 
 ## misc vars ##
+TEMP_NAME="tmp"
 TEMP_DIR="$TOP/tmp" #temp storage folder to be made
 SERVER_CREDS="$RSYNC_USER@$RSYNC_SERVER:$RSYNC_DIR" #full server data
 ###############
@@ -64,8 +65,7 @@ echo "----------------------------"
 cd $TO_BE_ARCHIVED # move to the correct dir
 for d in * 
 do 
-	if [ $d != "$TEMP_DIR" ]
-	then
+	if [[ $d != "$TEMP_NAME" ]]; then
 		echo "Moving $d to $TEMP_DIR..."
 		cp $d -at $TEMP_DIR #move files/folders to $TEMP_DIR
 	fi
@@ -75,11 +75,22 @@ echo "-----------------------------"
 cd $TOP
 
 echo "Archiving $TEMP_DIR..."
-$TAR_PATH --exclude="*/log" $TEMP_DIR -czf $FULL_NAME #archive $TEMP
+$TAR_PATH --exclude="*/log" --absolute-names $TEMP_DIR -czf $FULL_NAME #archive $TEMP
+echo "-----------------------------"
 
 echo "Sending $FULL_NAME to $SERVER_CREDS..."
 sshpass -p $RSYNC_PASS rsync $FULL_NAME $SERVER_CREDS
 
+echo "-----------------------------"
+echo "Removing $TEMP_DIR"
+#rm -rf $TEMP_DIR
+
+cd $TOP
+echo "Removing $FULL_NAME"
+#rm -rf $FULL_NAME
+echo "-----------------------------"
+
 END=$(date +%s)
 TOTAL=$(($END - $START))
 echo "Backup and transfer complete! It took $TOTAL seconds..."
+echo "-----------------------------"
